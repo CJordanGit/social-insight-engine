@@ -12,10 +12,20 @@ if "post_history" not in st.session_state:
 
 # --- SIDEBAR: API SETUP ---
 with st.sidebar:
-    st.header("Setup")
+    st.header("⚙️ Configuration")
     api_key = st.text_input("Gemini API Key", type="password")
     if api_key:
         genai.configure(api_key=api_key)
+    
+    st.divider()
+    st.header("🏢 Industry Context")
+    # This is the new input field
+    industry_context = st.text_area(
+        "Describe your niche & goal:", 
+        placeholder="e.g., I am a luxury travel creator aiming for high-ticket bookings. My audience is 30-50 year old professionals.",
+        help="The more specific you are, the less 'generic' the advice will be."
+    )
+    
     if st.button("Clear History"):
         st.session_state.post_history = []
         st.rerun()
@@ -28,6 +38,27 @@ with col2:
     video_file = st.file_uploader("🎬 Upload the Post Video (Optional)", type=["mp4", "mov", "avi"])
 
 if st.button("🚀 Run Deep Analysis"):
+    prompt = f"""
+        You are a Top 1% Viral Content Strategist and Behavioral Psychologist. You charge $10,000/month for your advice.
+        INDUSTRY CONTEXT: {industry_context if industry_context else 'General Content Creation'}
+
+        I am providing a video file AND analytics screenshots. Do not hold back. I need a ruthless, high-level breakdown of why this performed the way it did, followed by a specific blueprint for my NEXT post.
+
+        1. ## 🩸 The Bleed Point (Retention Audit):
+           - Look at the retention graph. At what EXACT second did the steepest drop-off occur? 
+           - Cross-reference that timestamp with the video. What was the 'Visual Sin' or 'Audio Lull' that killed the pacing? Be brutally honest. Was the frame stagnant? Did I repeat myself?
+
+        2. ## 🧠 The 'Friction' Report:
+           - Grade the first 3 seconds out of 10. Did it create an undeniable 'Curiosity Gap'? 
+           - Look at the audience demographic data in the screenshots. Did this content actually resonate with the intended age group/gender for my industry?
+
+        3. ## 🔮 Blueprint for the NEXT Post (Do This Next):
+           Based strictly on the data of what failed and what worked in these assets, build my next video:
+           - 🎯 **The Concept:** What specific topic should I cover next that leans into my core audience's actual interests?
+           - 🪝 **3 Word-for-Word Text Hooks:** Give me three highly aggressive, psychologically triggering text hooks for the first frame. They must be thumb-stopping and NOT generic.
+           - 🎬 **1 Visual Hook:** What EXACTLY should be happening on screen during the first 3 seconds to match those text hooks? (e.g., "Pouring coffee while the text pops up", "Walking quickly toward the camera").
+           - 🗣️ **The 'Anti-Drop' CTA:** Give me a frictionless Call-To-Action that feels natural, not salesy.
+        """
     if not api_key:
         st.error("Please enter your API Key!")
     elif not image_files and not video_file:
@@ -37,12 +68,7 @@ if st.button("🚀 Run Deep Analysis"):
         # 1. Use the most stable 2026 model
         model = genai.GenerativeModel('gemini-3.1-flash-lite-preview')
         
-        content_to_send = [
-            "Analyze these assets. Combine video content with screenshot data to provide: "
-            "1. ## ✅ What Went Well (Wins) "
-            "2. ## ⚠️ What to Improve (Hook & Retention) "
-            "3. ## 🕒 Best Times to Post"
-        ]
+        content_to_send = [prompt]
 
         with st.spinner("AI is processing your media..."):
             try:
